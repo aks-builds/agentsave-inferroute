@@ -5,7 +5,8 @@
 # agentsave-inferroute — PPD Inference Router
 
 [![CI](https://github.com/aks-builds/agentsave-inferroute/actions/workflows/ci.yml/badge.svg)](https://github.com/aks-builds/agentsave-inferroute/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/agentsave-inferroute.svg)](https://pypi.org/project/agentsave-inferroute/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
 [![Enterprise](https://img.shields.io/badge/tier-Enterprise-purple)](https://github.com/aks-builds/agentsave)
 
