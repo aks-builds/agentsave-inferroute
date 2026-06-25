@@ -23,6 +23,13 @@ dev = [
     "httpx>=0.27.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/aks-builds/agentsave-inferroute"
+Repository = "https://github.com/aks-builds/agentsave-inferroute"
+
+[project.scripts]
+inferroute = "inferroute.app:main"
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
