@@ -1,0 +1,79 @@
+name: Docker Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (e.g. 0.1.0 or latest)"
+        required: false
+        default: "latest"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Resolve image tags
+        id: tags
+        run: |
+          VERSION=$(python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); print(d['project']['version'])")
+          INPUT_TAG="${{ github.event.inputs.tag || 'latest' }}"
+          # On a git tag push, use the tag name (strip leading v)
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            INPUT_TAG="$VERSION"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tags=${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:$INPUT_TAG,${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.title=agentsave-inferroute
+            org.opencontainers.image.description=PPD turn-classifier and provider router for AgentSave Enterprise
+            org.opencontainers.image.version=${{ steps.tags.outputs.version }}
+            org.opencontainers.image.source=https://github.com/aks-builds/agentsave-inferroute
+            org.opencontainers.image.licenses=MIT
+
+      - name: Verify image
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:latest
+          docker run --rm \
+            -e BACKEND_URL=http://test:8000 \
+            ${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:latest \
+            python -c "from inferroute.app import app; print('Image OK')"
+
+      - name: Summary
+        run: |
+          echo "## Docker image published" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:${{ steps.tags.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run it:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -p 8080:8080 -e BACKEND_URL=http://your-vllm:8000 ${{ secrets.DOCKER_USERNAME }}/agentsave-inferroute:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

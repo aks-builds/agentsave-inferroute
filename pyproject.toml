@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "inferroute"
+name = "agentsave-inferroute"
 version = "0.1.0"
-description = "PPD append-prefill routing sidecar for vLLM / SGLang"
+description = "AgentSave InferRoute — PPD append-prefill routing sidecar for vLLM / SGLang (Enterprise)"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.111.0",
